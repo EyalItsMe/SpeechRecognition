@@ -35,6 +35,8 @@ def self_check_fft_stft():
 
     Include all plots in your PDF
     """
+    asdfasdfadfa
+    FATAL_CRASHasdfadfa
     raise NotImplementedError
 
 
