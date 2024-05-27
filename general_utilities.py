@@ -54,8 +54,13 @@ def do_stft(wav: torch.Tensor, n_fft: int=1024) -> torch.Tensor:
 
     returns: torch.tensor of the shape (1, n_fft, *, 2) or (B, 1, n_fft, *, 2), where last dim stands for real/imag entries.
     """
-    raise NotImplementedError
-
+    wav = torch.squeeze(wav)
+    stft = torch.stft(wav, n_fft=n_fft, onesided=False, return_complex=False)
+    if len(wav.shape) == 1:
+        stft = stft.unsqueeze(0)
+    else:
+        stft = stft.unsqueeze(1)
+    return stft
 
 def do_istft(spec: torch.Tensor, n_fft: int=1024) -> torch.Tensor:
     """
@@ -71,8 +76,18 @@ def do_istft(spec: torch.Tensor, n_fft: int=1024) -> torch.Tensor:
 
     NOTE: you may need to use torch.view_as_complex.
     """
-    raise NotImplementedError
+    if len(spec.shape) == 4:
+        spec = spec.squeeze(0)
+    else:
+        spec = spec.squeeze(1)
+    spec = torch.view_as_complex(spec)
+    istft = torch.istft(spec, n_fft=n_fft, onesided=False, win_length=n_fft, hop_length=n_fft//4, return_complex=False)
+    if len(istft.shape) == 1:
+        istft = istft.unsqueeze(0)
+    else:
+        istft = istft.unsqueeze(1)
 
+    return istft
 
 def do_fft(wav: torch.Tensor) -> torch.Tensor:
     """
@@ -85,8 +100,9 @@ def do_fft(wav: torch.Tensor) -> torch.Tensor:
 
     returns: corresponding FFT transformation considering ONLY POSITIVE frequencies, returned tensor should be of complex dtype.
     """
-    raise NotImplementedError
-
+    wav_tensor = wav.squeeze(0)
+    wav_tensor = torch.fft.rfft(wav_tensor)
+    return wav_tensor
 
 def plot_spectrogram(wav: torch.Tensor, n_fft: int=1024) -> None:
     """
@@ -94,8 +110,16 @@ def plot_spectrogram(wav: torch.Tensor, n_fft: int=1024) -> None:
     The Y axis should include frequencies in Hz and the x axis should include time in seconds.
 
     wav: torch tensor of the shape (1, T) or (B, 1, T) for the batched case.
-    """ 
-    raise NotImplementedError
+    """
+
+    plt.show()
+    wav_tensor = do_stft(wav, n_fft=n_fft)
+
+    # num_of_frames = wav_tensor.shape[-2]
+    # plt.figure(figsize=(10, 10))
+    plt.xlabel("Time")
+    plt.ylabel("Frequency")
+    plt.show()
 
 
 def plot_fft(wav: torch.Tensor) -> None:
@@ -110,4 +134,8 @@ def plot_fft(wav: torch.Tensor) -> None:
     raise NotImplementedError
 
 if __name__ == "__main__":
-    wav = load_wav("audio_files/phone_digits_8k/phone_0.wav")
+    wav, sr = load_wav("audio_files/phone_digits_8k/phone_0.wav")
+    # stft_file = do_stft(wav, n_fft=wav.shape[-1])
+    # do_istft(stft_file, n_fft=wav.shape[-1])
+    # fft = do_fft(wav
+    plot_spectrogram(wav, n_fft=wav.shape[-1])
