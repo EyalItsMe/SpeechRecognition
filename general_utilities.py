@@ -39,8 +39,8 @@ def load_wav(abs_path: tp.Union[str, Path]) -> tp.Tuple[torch.Tensor, int]:
         waveform: torch.Tensor (float) of shape [1, num_channels]
         sample_rate: int, the corresponding sample rate
     """
-    raise NotImplementedError
-
+    wav, sr = ta.load(abs_path)
+    return wav, sr
 
 def do_stft(wav: torch.Tensor, n_fft: int=1024) -> torch.Tensor:
     """
@@ -109,3 +109,5 @@ def plot_fft(wav: torch.Tensor) -> None:
     """ 
     raise NotImplementedError
 
+if __name__ == "__main__":
+    wav = load_wav("audio_files/phone_digits_8k/phone_0.wav")
