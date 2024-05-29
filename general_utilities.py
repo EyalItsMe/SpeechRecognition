@@ -122,10 +122,9 @@ def plot_spectrogram(wav: torch.Tensor, n_fft: int=1024, sr=16000) -> None:
     stft_result = do_stft(wav, n_fft=n_fft).squeeze(0)
     stft_result = torch.view_as_complex(stft_result)
     magnitude_spectrogram = torch.abs(stft_result).numpy()
-
     num_frames = magnitude_spectrogram.shape[-1]
-    time_axis = np.arange(num_frames) * (n_fft // 4)
-    freq_axis = np.arange(magnitude_spectrogram.shape[0])
+    time_axis = np.arange(num_frames) * (n_fft // 4) / sr
+    freq_axis = np.fft.rfftfreq(n_fft, d=1.0)
 
     plt.figure(figsize=(10, 6))
     plt.imshow(magnitude_spectrogram, aspect='auto', origin='lower',
@@ -154,7 +153,6 @@ def plot_fft(wav: torch.Tensor) -> None:
     fft_result = do_fft(wav)
     magnitude = torch.abs(fft_result).numpy()
     freq_bins = np.arange(len(fft_result))
-    # Plot the magnitude spectrum
     plt.figure(figsize=(10, 6))
     plt.plot(freq_bins, magnitude)
     plt.xlabel('Frequency (Hz)')
@@ -165,24 +163,24 @@ def plot_fft(wav: torch.Tensor) -> None:
 
 if __name__ == "__main__":
     wave, sr = load_wav("audio_files/phone_digits_8k/phone_0.wav")
-    plot_spectrogram(wave)
+    plot_spectrogram(wave,sr=sr)
+    plot_fft(wave)
     wave, sr = load_wav("audio_files/phone_digits_8k/phone_1.wav")
-    plot_spectrogram(wave)
+    plot_spectrogram(wave,sr=sr)
     wave, sr = load_wav("audio_files/phone_digits_8k/phone_2.wav")
-    plot_spectrogram(wave)
+    plot_spectrogram(wave, sr=sr)
     wave, sr = load_wav("audio_files/phone_digits_8k/phone_3.wav")
-    plot_spectrogram(wave)
+    plot_spectrogram(wave, sr=sr)
     wave, sr = load_wav("audio_files/phone_digits_8k/phone_4.wav")
-    plot_spectrogram(wave)
+    plot_spectrogram(wave, sr=sr)
     wave, sr = load_wav("audio_files/phone_digits_8k/phone_5.wav")
-    plot_spectrogram(wave)
+    plot_spectrogram(wave, sr=sr)
     wave, sr = load_wav("audio_files/phone_digits_8k/phone_6.wav")
-    plot_spectrogram(wave)
+    plot_spectrogram(wave, sr=sr)
     wave, sr = load_wav("audio_files/phone_digits_8k/phone_7.wav")
-    plot_spectrogram(wave)
+    plot_spectrogram(wave, sr=sr)
     wave, sr = load_wav("audio_files/phone_digits_8k/phone_8.wav")
-    plot_spectrogram(wave)
+    plot_spectrogram(wave, sr=sr)
     wave, sr = load_wav("audio_files/phone_digits_8k/phone_9.wav")
-
-    plot_spectrogram(wave)
+    plot_spectrogram(wave, sr=sr)
 
