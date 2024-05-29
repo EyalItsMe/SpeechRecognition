@@ -35,8 +35,11 @@ def self_check_fft_stft():
 
     Include all plots in your PDF
     """
-    raise NotImplementedError
-
+    onekh_wave = create_single_sin_wave(1000)
+    threekh_wave = create_single_sin_wave(3000)
+    plot_fft(onekh_wave)
+    plot_fft(threekh_wave)
+    plot_fft(onekh_wave + threekh_wave)
 
 def audio_check_fft_stft():
     """
@@ -50,7 +53,9 @@ def audio_check_fft_stft():
 
     Include all plots in your PDF
     """
-    raise NotImplementedError
+    oneKH_wave = create_single_sin_wave(1000)
+    threekh_wave = create_single_sin_wave(3000)
+
 
 
 # --------------------------------------------------------------------------------------------------
@@ -91,4 +96,6 @@ def classify_digit_stream(wav: torch.Tensor) -> tp.List[int]:
     return: List[int], all integers pressed (in order).
     """
     raise NotImplementedError
-    
+
+if __name__ == "__main__":
+    self_check_fft_stft()

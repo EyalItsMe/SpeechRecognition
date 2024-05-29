@@ -136,7 +136,7 @@ def plot_spectrogram(wav: torch.Tensor, n_fft: int=1024, sr=16000) -> None:
     plt.show()
 
 
-def plot_fft(wav: torch.Tensor) -> None:
+def plot_fft(wav: torch.Tensor, sr=16000) -> None:
     """
     This function plots the FFT transform to a given waveform.
     The X axis should include frequencies in Hz.
@@ -152,7 +152,7 @@ def plot_fft(wav: torch.Tensor) -> None:
 
     fft_result = do_fft(wav)
     magnitude = torch.abs(fft_result).numpy()
-    freq_bins = np.arange(len(fft_result))
+    freq_bins = np.fft.rfftfreq(len(wav), d=1.0/sr)
     plt.figure(figsize=(10, 6))
     plt.plot(freq_bins, magnitude)
     plt.xlabel('Frequency (Hz)')
