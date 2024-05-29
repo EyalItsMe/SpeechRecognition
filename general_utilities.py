@@ -1,3 +1,4 @@
+
 """
 This file will define the general utility functions you will need for you implementation throughout this ex.
 We suggest you start with implementing and testing the functions in this file.
@@ -43,7 +44,7 @@ def load_wav(abs_path: tp.Union[str, Path]) -> tp.Tuple[torch.Tensor, int]:
     return wav, sr
 
 
-def do_stft(wav: torch.Tensor, n_fft: int = 1024) -> torch.Tensor:
+def do_stft(wav: torch.Tensor, n_fft: int=1024) -> torch.Tensor:
     """
     This function performs STFT using win_length=n_fft and hop_length=n_fft//4.
     Should return the complex spectrogram.
@@ -64,7 +65,7 @@ def do_stft(wav: torch.Tensor, n_fft: int = 1024) -> torch.Tensor:
     return stft
 
 
-def do_istft(spec: torch.Tensor, n_fft: int = 1024) -> torch.Tensor:
+def do_istft(spec: torch.Tensor, n_fft: int=1024) -> torch.Tensor:
     """
     This function performs iSTFT using win_length=n_fft and hop_length=n_fft//4.
     Should return the complex spectrogram.
@@ -93,10 +94,10 @@ def do_istft(spec: torch.Tensor, n_fft: int = 1024) -> torch.Tensor:
     return istft
 
 
+
 def do_fft(wav: torch.Tensor) -> torch.Tensor:
     """
-    This function performs STFT using win_length=n_fft and hop_length=n_fft//4.
-    Should return the complex spectrogram.
+    This function performs fast fourier trasform (FFT) .
 
     hint: see scipy.fft.fft / torch.fft.rfft, you can convert the input tensor to numpy just make sure to cast it back to torch.
 
@@ -109,19 +110,22 @@ def do_fft(wav: torch.Tensor) -> torch.Tensor:
     return wav_tensor
 
 
-def plot_spectrogram(wav: torch.Tensor, n_fft: int = 1024) -> None:
+def plot_spectrogram(wav: torch.Tensor, n_fft: int=1024, sr=16000) -> None:
     """
     This function plots the magnitude spectrogram corresponding to a given waveform.
     The Y axis should include frequencies in Hz and the x axis should include time in seconds.
 
     wav: torch tensor of the shape (1, T) or (B, 1, T) for the batched case.
+
+    NOTE: for the batched case multiple plots should be generated (sequentially by order in batch)
     """
     stft_result = do_stft(wav, n_fft=n_fft).squeeze(0)
+    stft_result = torch.view_as_complex(stft_result)
     magnitude_spectrogram = torch.abs(stft_result).numpy()
 
-    num_frames = magnitude_spectrogram.shape[-2]
+    num_frames = magnitude_spectrogram.shape[-1]
     time_axis = np.arange(num_frames) * (n_fft // 4)
-    freq_axis = np.fft.rfftfreq(n_fft, 1.0)
+    freq_axis = np.arange(magnitude_spectrogram.shape[0])
 
     plt.figure(figsize=(10, 6))
     plt.imshow(magnitude_spectrogram, aspect='auto', origin='lower',
@@ -131,8 +135,6 @@ def plot_spectrogram(wav: torch.Tensor, n_fft: int = 1024) -> None:
     plt.ylabel('Frequency (Hz)')
     plt.title('Magnitude Spectrogram')
     plt.show()
-
-
 
 
 def plot_fft(wav: torch.Tensor) -> None:
@@ -161,10 +163,26 @@ def plot_fft(wav: torch.Tensor) -> None:
     plt.grid(True)
     plt.show()
 
-
 if __name__ == "__main__":
-    wave, sr = load_wav("audio_files/phone_digits_8k/phone_1.wav")
-    # stft_file = do_stft(wav, n_fft=wav.shape[-1])
-    # do_istft(stft_file, n_fft=wav.shape[-1])
-    # fft = do_fft(wav
+    wave, sr = load_wav("audio_files/phone_digits_8k/phone_0.wav")
     plot_spectrogram(wave)
+    wave, sr = load_wav("audio_files/phone_digits_8k/phone_1.wav")
+    plot_spectrogram(wave)
+    wave, sr = load_wav("audio_files/phone_digits_8k/phone_2.wav")
+    plot_spectrogram(wave)
+    wave, sr = load_wav("audio_files/phone_digits_8k/phone_3.wav")
+    plot_spectrogram(wave)
+    wave, sr = load_wav("audio_files/phone_digits_8k/phone_4.wav")
+    plot_spectrogram(wave)
+    wave, sr = load_wav("audio_files/phone_digits_8k/phone_5.wav")
+    plot_spectrogram(wave)
+    wave, sr = load_wav("audio_files/phone_digits_8k/phone_6.wav")
+    plot_spectrogram(wave)
+    wave, sr = load_wav("audio_files/phone_digits_8k/phone_7.wav")
+    plot_spectrogram(wave)
+    wave, sr = load_wav("audio_files/phone_digits_8k/phone_8.wav")
+    plot_spectrogram(wave)
+    wave, sr = load_wav("audio_files/phone_digits_8k/phone_9.wav")
+
+    plot_spectrogram(wave)
+
