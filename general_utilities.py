@@ -83,6 +83,7 @@ def do_istft(spec: torch.Tensor, n_fft: int=1024) -> torch.Tensor:
         spec = spec.squeeze(0)
     else:
         spec = spec.squeeze(1)
+    spec = spec.contiguous()
     spec = torch.view_as_complex(spec)
     istft = torch.istft(spec, n_fft=n_fft, onesided=False, win_length=n_fft, hop_length=n_fft // 4,
                         return_complex=False)
@@ -155,13 +156,14 @@ def plot_fft(wav: torch.Tensor, sr=16000) -> None:
         batch_size = wav.shape[0]
         if wav.dim() == 3:
             wav = wav.squeeze(1)
-
+        magni = []
         fig, axes = plt.subplots(batch_size, 1, figsize=(10, 6 * batch_size))
         if batch_size == 1:
             axes = [axes]
         for i in range(batch_size):
             fft_result = do_fft(wav[i])
             magnitude = torch.abs(fft_result).numpy()
+            magni.append(magnitude)
             freq_bins = np.fft.rfftfreq(len(wav[i]), d=1.0/sr)
             axes[i].plot(freq_bins, magnitude)
             axes[i].set_xlabel('Frequency (Hz)')

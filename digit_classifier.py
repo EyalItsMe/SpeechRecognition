@@ -83,9 +83,11 @@ def classify_single_digit(wav: torch.Tensor) -> int:
 
     return: int, digit number
     """
-    raise NotImplementedError
-
-
+    phones = []
+    for x in range(12):
+        wave, sr = load_wav("audio_files/phone_digits_8k/phone_" + str(x) + ".wav")
+        phones.append(wave)
+    plot_fft(torch.stack(phones))
 def classify_digit_stream(wav: torch.Tensor) -> tp.List[int]:
     """
     Q:
@@ -105,5 +107,6 @@ def classify_digit_stream(wav: torch.Tensor) -> tp.List[int]:
     raise NotImplementedError
 
 if __name__ == "__main__":
-    self_check_fft_stft()
-    audio_check_fft_stft()
+    # self_check_fft_stft()
+    # audio_check_fft_stft()
+    classify_single_digit("Hey")
