@@ -37,9 +37,8 @@ def self_check_fft_stft():
     """
     onekh_wave = create_single_sin_wave(1000).unsqueeze(0)
     threekh_wave = create_single_sin_wave(3000).unsqueeze(0)
-    plot_fft(onekh_wave)
-    plot_fft(threekh_wave)
-    plot_fft(onekh_wave + threekh_wave)
+    waves = torch.stack([onekh_wave,threekh_wave, onekh_wave + threekh_wave])
+    plot_fft(waves)
     concatenated_tensor = torch.cat((onekh_wave, threekh_wave, threekh_wave+onekh_wave))
     plot_spectrogram(concatenated_tensor.view(1, -1))
 
@@ -107,6 +106,6 @@ def classify_digit_stream(wav: torch.Tensor) -> tp.List[int]:
     raise NotImplementedError
 
 if __name__ == "__main__":
-    # self_check_fft_stft()
-    # audio_check_fft_stft()
+    self_check_fft_stft()
+    audio_check_fft_stft()
     classify_single_digit("Hey")

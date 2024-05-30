@@ -1,4 +1,3 @@
-
 """
 This file will define the general utility functions you will need for you implementation throughout this ex.
 We suggest you start with implementing and testing the functions in this file.
@@ -44,7 +43,7 @@ def load_wav(abs_path: tp.Union[str, Path]) -> tp.Tuple[torch.Tensor, int]:
     return wav, sr
 
 
-def do_stft(wav: torch.Tensor, n_fft: int=1024) -> torch.Tensor:
+def do_stft(wav: torch.Tensor, n_fft: int = 1024) -> torch.Tensor:
     """
     This function performs STFT using win_length=n_fft and hop_length=n_fft//4.
     Should return the complex spectrogram.
@@ -56,16 +55,24 @@ def do_stft(wav: torch.Tensor, n_fft: int=1024) -> torch.Tensor:
 
     returns: torch.tensor of the shape (1, n_fft, *, 2) or (B, 1, n_fft, *, 2), where last dim stands for real/imag entries.
     """
-    wav = torch.squeeze(wav)
-    stft = torch.stft(wav, n_fft=n_fft, onesided=False, return_complex=False)
-    if len(wav.shape) == 1:
-        stft = stft.unsqueeze(0)
-    else:
-        stft = stft.unsqueeze(1)
-    return stft
+    all_stft = []
+
+    dim = wav.dim()
+    batch_size = wav.shape[0]
+
+    if dim == 3:
+        wav = wav.squeeze(1)
+
+    for i in range(batch_size):
+        all_stft.append(torch.stft(wav[i], n_fft=n_fft, onesided=False, return_complex=False))
+
+    all_stft = torch.stack(all_stft)
+    if dim == 3:
+        all_stft = all_stft.unsqueeze(1)
+    return all_stft
 
 
-def do_istft(spec: torch.Tensor, n_fft: int=1024) -> torch.Tensor:
+def do_istft(spec: torch.Tensor, n_fft: int = 1024) -> torch.Tensor:
     """
     This function performs iSTFT using win_length=n_fft and hop_length=n_fft//4.
     Should return the complex spectrogram.
@@ -79,20 +86,23 @@ def do_istft(spec: torch.Tensor, n_fft: int=1024) -> torch.Tensor:
 
     NOTE: you may need to use torch.view_as_complex.
     """
-    if len(spec.shape) == 4:
-        spec = spec.squeeze(0)
-    else:
-        spec = spec.squeeze(1)
-    spec = spec.contiguous()
-    spec = torch.view_as_complex(spec)
-    istft = torch.istft(spec, n_fft=n_fft, onesided=False, win_length=n_fft, hop_length=n_fft // 4,
-                        return_complex=False)
-    if len(istft.shape) == 1:
-        istft = istft.unsqueeze(0)
-    else:
-        istft = istft.unsqueeze(1)
+    all_istft = []
+    dim = spec.dim()
+    batch_size = spec.shape[0]
 
-    return istft
+    if dim == 5:
+        spec = spec.squeeze(1)
+
+    for i in range(batch_size):
+        current_spec = spec[i].contiguous()
+        current_spec = torch.view_as_complex(current_spec)
+        all_istft.append(torch.istft(current_spec, n_fft=n_fft, onesided=False, win_length=n_fft, hop_length=n_fft // 4,
+                                     return_complex=False))
+
+    all_istft = torch.stack(all_istft)
+    if dim == 5:
+        all_istft = all_istft.unsqueeze(1)
+    return all_istft
 
 
 
@@ -111,7 +121,7 @@ def do_fft(wav: torch.Tensor) -> torch.Tensor:
     return wav_tensor
 
 
-def plot_spectrogram(wav: torch.Tensor, n_fft: int=1024, sr=16000) -> None:
+def plot_spectrogram(wav: torch.Tensor, n_fft: int = 1024, sr=16000) -> None:
     """
     This function plots the magnitude spectrogram corresponding to a given waveform.
     The Y axis should include frequencies in Hz and the x axis should include time in seconds.
@@ -120,15 +130,14 @@ def plot_spectrogram(wav: torch.Tensor, n_fft: int=1024, sr=16000) -> None:
 
     NOTE: for the batched case multiple plots should be generated (sequentially by order in batch)
     """
-    batch_size = wav.shape[0]
 
-    if wav.dim() == 3:
-        wav = wav.squeeze(1)
-
+    stft_result = do_stft(wav, n_fft=n_fft)
+    batch_size = stft_result.shape[0]
+    if stft_result.dim() == 5:
+        stft_result.squeeze(1)
     for i in range(batch_size):
-        stft_result = do_stft(wav[i], n_fft=n_fft).squeeze(0)
-        stft_result = torch.view_as_complex(stft_result)
-        magnitude_spectrogram = torch.abs(stft_result).numpy()
+        current_stft = torch.view_as_complex(stft_result[i])
+        magnitude_spectrogram = torch.abs(current_stft).numpy()
         magnitude_spectrogram = magnitude_spectrogram[:magnitude_spectrogram.shape[0] // 2]
         num_frames = magnitude_spectrogram.shape[-1]
         time_axis = np.arange(num_frames) * (n_fft // 4) / sr
@@ -145,7 +154,7 @@ def plot_spectrogram(wav: torch.Tensor, n_fft: int=1024, sr=16000) -> None:
 
 
 def plot_fft(wav: torch.Tensor, sr=16000) -> None:
-        """
+    """
         This function plots the FFT transform to a given waveform.
         The X axis should include frequencies in Hz.
 
@@ -153,23 +162,20 @@ def plot_fft(wav: torch.Tensor, sr=16000) -> None:
 
         wav: torch tensor of the shape (1, T) or (B, 1, T) for the batched case.
         """
-        batch_size = wav.shape[0]
-        if wav.dim() == 3:
-            wav = wav.squeeze(1)
-        magni = []
-        fig, axes = plt.subplots(batch_size, 1, figsize=(10, 6 * batch_size))
-        if batch_size == 1:
-            axes = [axes]
-        for i in range(batch_size):
-            fft_result = do_fft(wav[i])
-            magnitude = torch.abs(fft_result).numpy()
-            magni.append(magnitude)
-            freq_bins = np.fft.rfftfreq(len(wav[i]), d=1.0/sr)
-            axes[i].plot(freq_bins, magnitude)
-            axes[i].set_xlabel('Frequency (Hz)')
-            axes[i].set_ylabel('Magnitude')
-            axes[i].set_title(f'FFT Magnitude Spectrum for sample {i + 1}')
-            axes[i].grid(True)
+    batch_size = wav.shape[0]
+    if wav.dim() == 3:
+        wav = wav.squeeze(1)
+    fig, axes = plt.subplots(batch_size, 1, figsize=(10, 6 * batch_size))
+    if batch_size == 1:
+        axes = [axes]
+    for i in range(batch_size):
+        fft_result = do_fft(wav[i])
+        magnitude = torch.abs(fft_result).numpy()
+        freq_bins = np.fft.rfftfreq(len(wav[i]), d=1.0 / sr)
+        axes[i].plot(freq_bins, magnitude)
+        axes[i].set_xlabel('Frequency (Hz)')
+        axes[i].set_ylabel('Magnitude')
+        axes[i].set_title(f'FFT Magnitude Spectrum for sample {i + 1}')
+        axes[i].grid(True)
 
-        plt.show()
-
+    plt.show()
