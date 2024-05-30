@@ -49,6 +49,13 @@ def naive_time_stretch_stft(wav: torch.Tensor, factor: float):
 
     Do NOT include saved audio in your submission.
     """
+    wav_one = wav[0].unsqueeze(0)
+    stft_one = do_stft(wav_one,1024)
+    plot_spectrogram(wav_one)
+    wav_two = wav[1].unsqueeze(0)
+    stft_two = do_stft(wav_two,1024)
+    interpolate_one = interpolate(stft_one, size=int(stft_one.size(-1) * factor), mode="linear", align_corners=False)
+    interpolate_two = interpolate(stft_two, size=int(stft_two.size(-1) * factor), mode="linear", align_corners=False)
 
 
 
@@ -56,6 +63,10 @@ if __name__ == "__main__":
     wave, sr = load_wav("audio_files/Basta_16k.wav")
     stretched_0_8 = naive_time_stretch_temporal(wave, 0.8)
     stretched_1_2 = naive_time_stretch_temporal(wave, 1.2)
+    ta.save("stretched_Basta_0_8.wav", stretched_0_8, 16000)
+    ta.save("stretched_Basta_1_2.wav", stretched_1_2, 16000)
+    stretched_0_8 = naive_time_stretch_stft(wave, 0.8)
+    stretched_1_2 = naive_time_stretch_stft(wave, 1.2)
     ta.save("stretched_Basta_0_8.wav", stretched_0_8, 16000)
     ta.save("stretched_Basta_1_2.wav", stretched_1_2, 16000)
 

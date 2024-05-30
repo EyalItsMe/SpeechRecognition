@@ -40,6 +40,8 @@ def self_check_fft_stft():
     plot_fft(onekh_wave)
     plot_fft(threekh_wave)
     plot_fft(onekh_wave + threekh_wave)
+    concatenated_tensor = torch.cat((onekh_wave, threekh_wave, threekh_wave+onekh_wave))
+    plot_spectrogram(concatenated_tensor)
 
 def audio_check_fft_stft():
     """
@@ -53,8 +55,16 @@ def audio_check_fft_stft():
 
     Include all plots in your PDF
     """
-    oneKH_wave = create_single_sin_wave(1000)
-    threekh_wave = create_single_sin_wave(3000)
+    phones = []
+    for x in range(12):
+        wave, sr = load_wav("audio_files/phone_digits_8k/phone_" + str(x) + ".wav")
+        phones.append(wave)
+    plot_fft(phones[0])
+    plot_fft(phones[1])
+    plot_spectrogram(phones[0])
+    plot_spectrogram(phones[1])
+    concatenated_waves = torch.flatten(torch.cat(phones)).unsqueeze(0)
+    plot_spectrogram(concatenated_waves)
 
 
 
@@ -99,3 +109,4 @@ def classify_digit_stream(wav: torch.Tensor) -> tp.List[int]:
 
 if __name__ == "__main__":
     self_check_fft_stft()
+    audio_check_fft_stft()
