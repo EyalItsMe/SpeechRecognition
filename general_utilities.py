@@ -119,45 +119,55 @@ def plot_spectrogram(wav: torch.Tensor, n_fft: int=1024, sr=16000) -> None:
 
     NOTE: for the batched case multiple plots should be generated (sequentially by order in batch)
     """
-    stft_result = do_stft(wav, n_fft=n_fft).squeeze(0)
-    stft_result = torch.view_as_complex(stft_result)
-    magnitude_spectrogram = torch.abs(stft_result).numpy()
-    num_frames = magnitude_spectrogram.shape[-1]
-    time_axis = np.arange(num_frames) * (n_fft // 4) / sr
-    freq_axis = np.arange(magnitude_spectrogram.shape[0]/2) * sr / n_fft
+    batch_size = wav.shape[0]
 
-    plt.figure(figsize=(10, 6))
-    plt.imshow(magnitude_spectrogram, aspect='auto', origin='lower',
-               extent=[time_axis.min(), time_axis.max(), freq_axis.min(), freq_axis.max()])
-    plt.colorbar(label='Magnitude')
-    plt.xlabel('Time (s)')
-    plt.ylabel('Frequency (Hz)')
-    plt.title('Magnitude Spectrogram')
-    plt.show()
+    if wav.dim() == 3:
+        wav = wav.squeeze(1)
+
+    for i in range(batch_size):
+        stft_result = do_stft(wav[i], n_fft=n_fft).squeeze(0)
+        stft_result = torch.view_as_complex(stft_result)
+        magnitude_spectrogram = torch.abs(stft_result).numpy()
+        magnitude_spectrogram = magnitude_spectrogram[:magnitude_spectrogram.shape[0] // 2]
+        num_frames = magnitude_spectrogram.shape[-1]
+        time_axis = np.arange(num_frames) * (n_fft // 4) / sr
+        freq_axis = np.arange(magnitude_spectrogram.shape[0]) * sr / n_fft
+
+        plt.figure(figsize=(10, 6))
+        plt.imshow(magnitude_spectrogram, aspect='auto', origin='lower',
+                   extent=[time_axis.min(), time_axis.max(), freq_axis.min(), freq_axis.max()])
+        plt.colorbar(label='Magnitude')
+        plt.xlabel('Time (s)')
+        plt.ylabel('Frequency (Hz)')
+        plt.title('Magnitude Spectrogram')
+        plt.show()
 
 
 def plot_fft(wav: torch.Tensor, sr=16000) -> None:
-    """
-    This function plots the FFT transform to a given waveform.
-    The X axis should include frequencies in Hz.
+        """
+        This function plots the FFT transform to a given waveform.
+        The X axis should include frequencies in Hz.
 
-    NOTE: As abs(FFT) reflects around zero, please plot only the POSITIVE frequencies.
+        NOTE: As abs(FFT) reflects around zero, please plot only the POSITIVE frequencies.
 
-    wav: torch tensor of the shape (1, T) or (B, 1, T) for the batched case.
-    """
-    if wav.dim() == 3:
-        wav = wav.squeeze(1)
-    elif wav.dim() == 2:
-        wav = wav.squeeze(0)
+        wav: torch tensor of the shape (1, T) or (B, 1, T) for the batched case.
+        """
+        batch_size = wav.shape[0]
+        if wav.dim() == 3:
+            wav = wav.squeeze(1)
 
-    fft_result = do_fft(wav)
-    magnitude = torch.abs(fft_result).numpy()
-    freq_bins = np.fft.rfftfreq(len(wav), d=1.0/sr)
-    plt.figure(figsize=(10, 6))
-    plt.plot(freq_bins, magnitude)
-    plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Magnitude')
-    plt.title('FFT Magnitude Spectrum')
-    plt.grid(True)
-    plt.show()
+        fig, axes = plt.subplots(batch_size, 1, figsize=(10, 6 * batch_size))
+        if batch_size == 1:
+            axes = [axes]
+        for i in range(batch_size):
+            fft_result = do_fft(wav[i])
+            magnitude = torch.abs(fft_result).numpy()
+            freq_bins = np.fft.rfftfreq(len(wav[i]), d=1.0/sr)
+            axes[i].plot(freq_bins, magnitude)
+            axes[i].set_xlabel('Frequency (Hz)')
+            axes[i].set_ylabel('Magnitude')
+            axes[i].set_title(f'FFT Magnitude Spectrum for sample {i + 1}')
+            axes[i].grid(True)
+
+        plt.show()
 
