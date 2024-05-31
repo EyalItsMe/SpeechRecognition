@@ -2,7 +2,7 @@
 This file will implement a digit classifier using rule-based dsp methods.
 As all digit waveforms are given, we could take that under consideration, of our RULE-BASED system.
 
-We reccomend you answer this after filling all functions in general_utilities.
+We recommend you answer this after filling all functions in general_utilities.
 """
 import torchaudio as ta
 import soundfile as sf
@@ -63,12 +63,23 @@ def audio_check_fft_stft():
     plot_spectrogram(concatenated_waves)
 
 
-
 # --------------------------------------------------------------------------------------------------
 #     Part B        Part B        Part B        Part B        Part B        Part B        Part B    
 # ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 # Digit Classifier
 # --------------------------------------------------------------------------------------------------
+
+def extract_digit_freq_helper() -> tp.Dict[int, tp.Tuple[int, int]]:
+    freqs = {}
+
+    for digit in range(12):
+        wave, sr = load_wav("audio_files/phone_digits_8k/phone_" + str(digit) + ".wav")
+        fft = do_fft(wave)
+        magnitude = torch.abs(fft).numpy()
+        frequencies = np.fft.fftfreq(magnitude.shape[-1], 1/sr)
+        dominant_freq = frequencies[np.argsort(magnitude)[-2:]]
+        freqs[digit] = dominant_freq
+    return freqs
 
 def classify_single_digit(wav: torch.Tensor) -> int:
     """
@@ -82,11 +93,29 @@ def classify_single_digit(wav: torch.Tensor) -> int:
 
     return: int, digit number
     """
-    phones = []
-    for x in range(12):
-        wave, sr = load_wav("audio_files/phone_digits_8k/phone_" + str(x) + ".wav")
-        phones.append(wave)
-    plot_fft(torch.stack(phones))
+
+    frequencies = extract_digit_freq_helper()
+    # phones = []
+    # for x in range(12):
+    #     wave, sr = load_wav("audio_files/phone_digits_8k/phone_" + str(x) + ".wav")
+    #     phones.append(wave)
+    # plot_fft(torch.stack(phones))
+    #
+    fft = do_fft(wav)
+    magnitude = torch.abs(fft).numpy()
+    freq = np.fft.fftfreq(magnitude.shape[-1], 1/8000)
+    dominant_freq = freq[np.argsort(magnitude)[-2:]]
+    min_diff = float('inf')
+    digit = -1
+    for key,val in frequencies.items():
+        diff = abs(val[0] - dominant_freq[0]) + abs(val[1] - dominant_freq[1])
+        if diff < min_diff:
+            min_diff = diff
+            digit = key
+    return digit
+
+
+
 def classify_digit_stream(wav: torch.Tensor) -> tp.List[int]:
     """
     Q:
@@ -108,4 +137,6 @@ def classify_digit_stream(wav: torch.Tensor) -> tp.List[int]:
 if __name__ == "__main__":
     self_check_fft_stft()
     audio_check_fft_stft()
-    classify_single_digit("Hey")
+    phone_0,_ = load_wav("audio_files/phone_digits_8k/phone_0.wav")
+    dig = classify_single_digit(phone_0)
+    print(dig)
