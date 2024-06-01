@@ -112,6 +112,8 @@ def classify_single_digit(wav: torch.Tensor) -> int:
         if diff < min_diff:
             min_diff = diff
             digit = key
+    if min_diff > 100:
+        return -1
     return digit
 
 
@@ -132,11 +134,39 @@ def classify_digit_stream(wav: torch.Tensor) -> tp.List[int]:
 
     return: List[int], all integers pressed (in order).
     """
-    raise NotImplementedError
+    silence_threshold = 1e-2
+    n_fft = 1024
+    hop_length = n_fft // 4
+    stft_result = do_stft(wav, n_fft)
+
+    current_stft = torch.view_as_complex(stft_result[0])
+    magnitude = torch.abs(current_stft)
+    magnitude = magnitude[:magnitude.shape[0] // 2]
+    num_frames = magnitude.shape[-1]
+
+    digit_segment = []
+    cur_segment = []
+    for i in range(num_frames):
+        if torch.max(magnitude[:, i]) > silence_threshold:
+            cur_segment.append(i)
+        elif len(cur_segment) > 0:
+            digit_segment.append(cur_segment)
+            cur_segment = []
+    if len(cur_segment) > 0:
+        digit_segment.append(cur_segment)
+
+    digits = []
+    for segment in digit_segment:
+        start_idx = segment[0] * hop_length
+        end_idx = (segment[-1]+1) * hop_length
+        cur_wav = wav[:, start_idx:end_idx]
+        digit = classify_single_digit(cur_wav)
+        if digit != -1:
+            digits.append(digit)
+    return digits
 
 if __name__ == "__main__":
     self_check_fft_stft()
     audio_check_fft_stft()
-    phone_0,_ = load_wav("audio_files/phone_digits_8k/phone_0.wav")
-    dig = classify_single_digit(phone_0)
-    print(dig)
+    digits, sr = load_wav("audio_files/phone_digits_8k/phone_3.wav")
+    print(classify_digit_stream(digits))
