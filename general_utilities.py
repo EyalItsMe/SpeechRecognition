@@ -180,3 +180,11 @@ def plot_fft(wav: torch.Tensor, sr=16000) -> None:
 
     plt.show()
 
+def Q_1_3():
+    sin_1k = create_single_sin_wave(frequency_in_hz=1000, sample_rate=8000).unsqueeze(0)
+    sin_5k = create_single_sin_wave(frequency_in_hz=5000, sample_rate=8000).unsqueeze(0)
+    waves = torch.stack([sin_1k + sin_5k])
+    plot_fft(waves, sr=8000)
+
+
+
