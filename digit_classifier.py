@@ -165,9 +165,4 @@ def classify_digit_stream(wav: torch.Tensor) -> tp.List[int]:
             digits.append(digit)
     return digits
 
-if __name__ == "__main__":
-    self_check_fft_stft()
-    audio_check_fft_stft()
-    digits, sr = load_wav("audio_files/phone_digits_8k/phone_8.wav")
-    print(classify_single_digit(digits))
-    print(classify_digit_stream(digits))
+
