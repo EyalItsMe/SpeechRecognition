@@ -95,12 +95,6 @@ def classify_single_digit(wav: torch.Tensor) -> int:
     """
 
     frequencies = extract_digit_freq_helper()
-    # phones = []
-    # for x in range(12):
-    #     wave, sr = load_wav("audio_files/phone_digits_8k/phone_" + str(x) + ".wav")
-    #     phones.append(wave)
-    # plot_fft(torch.stack(phones))
-    #
     fft = do_fft(wav)
     magnitude = torch.abs(fft).numpy()
     freq = np.fft.fftfreq(magnitude.shape[-1], 1/8000)
@@ -108,7 +102,8 @@ def classify_single_digit(wav: torch.Tensor) -> int:
     min_diff = float('inf')
     digit = -1
     for key,val in frequencies.items():
-        diff = abs(val[0] - dominant_freq[0]) + abs(val[1] - dominant_freq[1])
+        diff = min(abs(val[0] - dominant_freq[0]) + abs(val[1] - dominant_freq[1]),
+                   abs(val[0] - dominant_freq[1]) + abs(val[1] - dominant_freq[0]))
         if diff < min_diff:
             min_diff = diff
             digit = key
@@ -164,5 +159,3 @@ def classify_digit_stream(wav: torch.Tensor) -> tp.List[int]:
         if digit != -1:
             digits.append(digit)
     return digits
-
-
