@@ -153,7 +153,7 @@ def plot_spectrogram(wav: torch.Tensor, n_fft: int = 1024, sr=16000) -> None:
         plt.show()
 
 
-def plot_fft(wav: torch.Tensor, sr=16000) -> None:
+def plot_fft(wav: torch.Tensor) -> None:
     """
         This function plots the FFT transform to a given waveform.
         The X axis should include frequencies in Hz.
@@ -163,6 +163,7 @@ def plot_fft(wav: torch.Tensor, sr=16000) -> None:
         wav: torch tensor of the shape (1, T) or (B, 1, T) for the batched case.
         """
     batch_size = wav.shape[0]
+    sr = 8000
     if wav.dim() == 3:
         wav = wav.squeeze(1)
     fig, axes = plt.subplots(batch_size, 1, figsize=(10, 6 * batch_size))
@@ -184,7 +185,7 @@ def Q_1_3():
     sin_1k = create_single_sin_wave(frequency_in_hz=1000, sample_rate=8000).unsqueeze(0)
     sin_5k = create_single_sin_wave(frequency_in_hz=5000, sample_rate=8000).unsqueeze(0)
     waves = torch.stack([sin_1k + sin_5k])
-    plot_fft(waves, sr=8000)
+    plot_fft(waves)
 
 
 
